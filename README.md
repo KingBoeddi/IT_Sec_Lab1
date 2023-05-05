@@ -1,6 +1,6 @@
 # Web Application - Notes
 
-This web application is a simple notes management system that allows users to create, edit, and delete notes. The application uses Node.js for the server-side, MySQL for the database, and Docker for containerization.
+This web application is a simple notes management system that allows users to create, edit, and delete notes. The application uses Node.js and Express for the server-side, MySQL for the database, and Docker for containerization.
 
 ## Prerequisites
 
