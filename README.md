@@ -19,10 +19,8 @@ Follow the steps below to get the web application running on your machine:
 If you have Git installed, you can clone the repository using the following command:
 
 ```sh
-git clone https://github.com/yourusername/your-repository.git
+git clone https://github.com/KingBoeddi/IT_Sec_Lab1.git
 ```
-
-Replace `yourusername` and `your-repository` with the appropriate values.
 
 ### 2. Configure environment variables
 
