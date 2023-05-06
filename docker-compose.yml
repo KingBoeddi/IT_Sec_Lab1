@@ -7,8 +7,8 @@ services:
     environment:
       - MYSQL_DATABASE=webapp_notes
       - MYSQL_USER=dbadmin
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-itseclab}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-itseclab}
       - MYSQL_CONNECT_TIMEOUT=60000
     networks:
       - webapp-notes-network
