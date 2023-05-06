@@ -32,7 +32,7 @@ services:
         "/wait-for-it.sh",
         "mysql_server:3306",
         "-t",
-        "20",
+        "30",
         "--",
         "npm",
         "start"
