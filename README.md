@@ -22,16 +22,14 @@ If you have Git installed, you can clone the repository using the following comm
 git clone https://github.com/KingBoeddi/IT_Sec_Lab1.git --config core.autocrlf=input
 ```
 
-### 2. Configure environment variables
+### 2. Edit environment variables
 
-Create a `.env` file in the project root directory with the following content:
+Replace `your_root_password` and `your_password` with your desired MySQL root password and user password, respectively.
 
 ```
 MYSQL_ROOT_PASSWORD=your_root_password
 MYSQL_PASSWORD=your_password
 ```
-
-Replace `your_root_password` and `your_password` with your desired MySQL root password and user password, respectively.
 
 ### 3. Build and run the web application using Docker Compose
 
