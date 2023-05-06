@@ -20,16 +20,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8080:8080
-    volumes:
-      - /app/node_modules
-      - ./scripts/wait-for-it.sh:/wait-for-it.sh
     depends_on:
       - mysql_server
     networks:
       - webapp-notes-network
     command:
       [
-        "/wait-for-it.sh",
+        "/app/wait-for-it.sh",
         "mysql_server:3306",
         "-t",
         "30",
