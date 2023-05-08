@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import url from "url";
 import path from "path";
-import methodeOverride from "method-override"
+import methodeOverride from "method-override";
 
 // Importiere benutzerdefinierte Funktionen aus database.js
 import {
@@ -44,6 +44,11 @@ const DB_CONFIG = {
 };
 
 app.set("view engine", "ejs");
+
+// Serve favicon.ico file
+app.get("/favico.ico", (req, res) => {
+  res.sendFile("./myfavico.ico");
+});
 
 // Set up express-session
 app.use(
@@ -131,7 +136,6 @@ const basicAuth = (req, res, next) => {
 /* OWASP Top 10: A5:2021 Security Misconfiguration
 /allnotes endpoint is not properly protected, and anyone who knows the URL can access it. */
 app.get("/allnotes", async (req, res) => {
-
   //  LÖSUNG
   /* // Check if user is logged in
   if (!req.session.userId) {
@@ -181,11 +185,11 @@ app.post("/login", async (req, res) => {
     }
   } catch (error) {
     if (error.sqlMessage) {
-      console.error("SQL error:", error);
-      res.render('login', { error: error });
+      console.log("SQL error:", error);
+      res.render("login", { error: error });
     } else {
-      console.error("Non-SQL error:", error);
-      res.render('login', { error: "An error occurred" });
+      console.log("Non-SQL error:", error);
+      res.render("login", { error: "An error occurred" });
     }
   }
 });
@@ -224,7 +228,6 @@ app.post("/notes", (req, res) => {
 
 app.get("/edit-note/:note_id", basicAuth, async (req, res) => {
   try {
-
     const noteId = req.params.note_id;
     const userId = req.session.userId;
 

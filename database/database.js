@@ -18,7 +18,11 @@ any password will be accepted for a given username. This can be exploited by an
 attacker to log in as any user without knowing the user's password. */
 export async function weakAuthenticate(username) {
   const users = await getUsers();
-  return users.find((user) => user.username === username);
+  try {
+    return users.find((user) => user.username === username);
+  } catch (error) {
+    console.err(error);
+  }
 }
 
 // Funktion zur Überprüfung der Benutzeranmeldeinformationen gegen die Datenbank (sichere Variante)
