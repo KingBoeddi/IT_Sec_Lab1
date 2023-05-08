@@ -12,6 +12,8 @@ services:
       - MYSQL_CONNECT_TIMEOUT=60000
     networks:
       - webapp-notes-network
+    ports:
+      - '3306:3306'
   app:
     container_name: webapp_notes_app
     image: node:latest

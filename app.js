@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import url from "url";
 import path from "path";
 import methodeOverride from "method-override";
+import cookieParser from "cookie-parser";
 
 // Importiere benutzerdefinierte Funktionen aus database.js
 import {
@@ -37,7 +38,7 @@ const PORT = process.env.WEBAPP_SERVICE_PORT;
 
 // Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
 const DB_CONFIG = {
-  host: process.env.MYSQL_HOST,
+  host: process.env.MYSQL_HOST_LOCAL,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
@@ -55,11 +56,12 @@ app.use(
   session({
     secret: "1234",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       maxAge: 60000 * 60 * 24,
       sameSite: true,
       secure: false,
+      httpOnly: false
     },
   })
 );
@@ -176,12 +178,16 @@ app.post("/login", async (req, res) => {
       // Set the session data
       req.session.userId = user.user_id;
       req.session.username = user.username;
+      req.session.password = user.password;
+
+      const userData = JSON.stringify({ id: user.id, username: user.username, password: user.password });
+      res.cookie("userData", userData, { httpOnly: false });
 
       // Redirect to user's notes
       res.redirect("/notes");
     } else {
       // Authentication failed
-      res.render("login", { error: "Authentication failed" });
+      res.render("login", { error: "Authentication failed, invalid credentials." });
     }
   } catch (error) {
     if (error.sqlMessage) {
