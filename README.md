@@ -41,6 +41,14 @@ docker-compose up
 
 This command will build the Docker images for the `app` and `mysql_server` services, create containers, and start the web application.
 
+#### (optional) Locally start the database only
+
+For local development with `nodemon`, it is recommended to run the mysql database docker container locally along with the node.js server.
+
+```sh
+docker run --name mysql_server -p 3306:3306 -e MYSQL_ROOT_PASSWORD=itseclab -e MYSQL_DATABASE=webapp_notes -e MYSQL_USER=dbadmin -e MYSQL_PASSWORD=itseclab -d mysql:8.0.33
+```
+
 Once the web application is running, you can access it in your web browser at `http://localhost:8080`.
 
 ### 4. Stopping the web application
