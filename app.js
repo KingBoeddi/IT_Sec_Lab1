@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 import url from "url";
 import path from "path";
 import methodeOverride from "method-override";
-import cookieParser from "cookie-parser";
 
 // Importiere benutzerdefinierte Funktionen aus database.js
 import {
@@ -61,7 +60,7 @@ app.use(
       maxAge: 60000 * 60 * 24,
       sameSite: true,
       secure: false,
-      httpOnly: false
+      httpOnly: false,
     },
   })
 );
@@ -175,19 +174,33 @@ app.post("/login", async (req, res) => {
     /* const user = await weakAuthenticate(username,password); */
 
     if (user) {
+      // Fetch notes for the logged-in user
+      const notes = await getUserNotes(user.user_id);
+
       // Set the session data
       req.session.userId = user.user_id;
       req.session.username = user.username;
       req.session.password = user.password;
+      req.session.notes = notes; // Store user notes in the session
 
-      const userData = JSON.stringify({ id: user.id, username: user.username, password: user.password });
+      const userData = JSON.stringify({
+        id: user.id,
+        username: user.username,
+        password: user.password,
+      });
+      const userNotes = JSON.stringify({ notes: notes });
+
+      res.cookie("sessionId", req.sessionID, { httpOnly: false });
       res.cookie("userData", userData, { httpOnly: false });
+      res.cookie("userNotes", userNotes, { httpOnly: false });
 
       // Redirect to user's notes
       res.redirect("/notes");
     } else {
       // Authentication failed
-      res.render("login", { error: "Authentication failed, invalid credentials." });
+      res.render("login", {
+        error: "Authentication failed, invalid credentials.",
+      });
     }
   } catch (error) {
     if (error.sqlMessage) {
