@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS webapp_notes;
+dCREATE DATABASE IF NOT EXISTS webapp_notes;
 
 USE webapp_notes;
 

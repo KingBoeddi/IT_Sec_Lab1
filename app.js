@@ -37,7 +37,7 @@ const PORT = process.env.WEBAPP_SERVICE_PORT;
 
 // Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
 const DB_CONFIG = {
-  host: process.env.MYSQL_HOST_LOCAL,
+  host: process.env.MYSQL_HOST_LOCAL || process.env.MYSQL_HOST,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
