@@ -7,7 +7,7 @@ dotenv.config();
 
 // Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
 export const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
+  host: process.env.WEBAPP_SERVICE_DB_LOCAL,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
@@ -18,7 +18,11 @@ any password will be accepted for a given username. This can be exploited by an
 attacker to log in as any user without knowing the user's password. */
 export async function weakAuthenticate(username) {
   const users = await getUsers();
-  return users.find((user) => user.username === username);
+  try {
+    return users.find((user) => user.username === username);
+  } catch (error) {
+    console.err(error);
+  }
 }
 
 // Funktion zur Überprüfung der Benutzeranmeldeinformationen gegen die Datenbank (sichere Variante)
@@ -110,4 +114,17 @@ export async function updateNote(noteId, title, content) {
     `UPDATE Note SET title = '${title}', content = '${content}' WHERE note_id = ${noteId}`
   );
   return result;
+}
+
+//  Löscht eine Notiz in der Datenbank
+export async function deleteNote(noteId) {
+  try {
+    const [result] = await pool.query(
+      `DELETE FROM Note WHERE note_id = ?`, [noteId]
+    );
+    return result;
+  } catch (error) {
+    console.error("Error occurred while deleting note:", error);
+    throw error;
+  }
 }
