@@ -121,9 +121,15 @@
                 class="btn btn-primary col"
                 >Edit</a
               >
-              <a href="/delete/<%= note.note_id %>" class="btn btn-danger col"
-                >Delete</a
+              <!-- Change the anchor tag to a form with a hidden input field for the _method override -->
+              <form
+                action="/delete-note/<%= note.note_id %>?_method=POST"
+                method="POST"
+                class="d-inline"
               >
+                <input type="hidden" name="_method" value="DELETE" />
+                <button type="submit" class="btn btn-danger col">Delete</button>
+              </form>
             </div>
           </div>
         </div>

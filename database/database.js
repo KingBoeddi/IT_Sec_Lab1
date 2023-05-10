@@ -115,3 +115,16 @@ export async function updateNote(noteId, title, content) {
   );
   return result;
 }
+
+//  Löscht eine Notiz in der Datenbank
+export async function deleteNote(noteId) {
+  try {
+    const [result] = await pool.query(
+      `DELETE FROM Note WHERE note_id = ?`, [noteId]
+    );
+    return result;
+  } catch (error) {
+    console.error("Error occurred while deleting note:", error);
+    throw error;
+  }
+}

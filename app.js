@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import url from "url";
 import path from "path";
-import methodeOverride from "method-override";
+import methodOverride from "method-override";
 
 // Importiere benutzerdefinierte Funktionen aus database.js
 import {
@@ -18,6 +18,7 @@ import {
   getUsers,
   validateUserCredentials,
   weakAuthenticate,
+  deleteNote,
 } from "./database/database.js";
 
 // Importiere readFile Funktion aus fs/promises Modul
@@ -33,7 +34,7 @@ dotenv.config();
 const app = express();
 
 // Setze den Port, auf dem die Anwendung lauschen soll
-const PORT = process.env.WEBAPP_SERVICE_PORT;
+const PORT = process.env.WEBAPP_SERVICE_APP_PORT;
 
 // Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
 const DB_CONFIG = {
@@ -63,7 +64,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
-app.use(methodeOverride("_method"));
+app.use(methodOverride("_method"));
 
 // Funktion zum Ausführen einer SQL-Datei mit der angegebenen MySQL-Verbindung
 async function executeSQLFile(filePath, connection) {
@@ -128,7 +129,7 @@ const basicAuth = (req, res, next) => {
   }
 };
 
-/* OWASP Top 10: A5:2021 Security Misconfiguration
+/* OWASP Top 10: A07:2021 – Identification and Authentication Failures
 /allnotes endpoint is not properly protected, and anyone who knows the URL can access it. */
 app.get("/allnotes", async (req, res) => {
   //  LÖSUNG
@@ -141,6 +142,8 @@ app.get("/allnotes", async (req, res) => {
   const notes = await getNotes();
   res.send(notes);
 });
+
+app.delete;
 
 app.get("/", (req, res) => {
   const errors = [];
@@ -251,7 +254,7 @@ app.get("/edit-note/:note_id", basicAuth, async (req, res) => {
   }
 });
 
-app.put("/edit-note/:note_id", basicAuth, async (req, res) => {
+app.post("/edit-note/:note_id", basicAuth, async (req, res) => {
   // Check if user is logged in
   if (!req.session.userId) {
     res.redirect("/login");
@@ -271,6 +274,21 @@ app.put("/edit-note/:note_id", basicAuth, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Error occurred while updating note");
+  }
+});
+
+app.post("/delete-note/:note_id", basicAuth, async (req, res) => {
+  try {
+    const noteId = req.params.note_id;
+
+    // Delete the note with the given ID
+    await deleteNote(noteId);
+
+    // Redirect to user's notes
+    res.redirect("/notes");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error occurred while deleting note");
   }
 });
 
