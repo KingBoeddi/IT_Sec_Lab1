@@ -17,7 +17,6 @@ import {
   fetchNoteById,
   getUsers,
   validateUserCredentials,
-  weakAuthenticate,
   deleteNote,
 } from "./database/database.js";
 
@@ -48,11 +47,17 @@ app.set("view engine", "ejs");
 
 // Set up express-session
 
-// OWASP Top 10: A06:2021 – Vulnerable and Outdated Components
-// The express-session package is being used without the 'secure' flag on the session cookie
+/* OWASP Top 10: A02:2021 – Cryptographic Failures
+In der Verwendung von express-session wird ein schwaches Geheimnis 1234 verwendet. Dieses Geheimnis
+ kann leicht erraten oder durch Brute-Force-Angriffe geknackt werden. Es wird empfohlen, 
+ ein starkes, zufällig generiertes Geheimnis mit ausreichender Länge und Komplexität zu verwenden. */
 
-// OWASP Top 10: A02:2021 – Cryptographic Failures
-// weak secret can be easily guessed or brute-forced. It is recommended to use a strong, randomly generated secret with sufficient length and complexity
+ /* A05:2021 – Security Misconfiguration (Sicherheitsfehlkonfiguration)
+
+ Das Cookie-Attribut secure ist auf false gesetzt. Dies kann dazu führen, dass die Anwendung 
+ anfällig für Man-in-the-Middle-Angriffe wird, bei denen Angreifer unverschlüsselte Cookies 
+ abfangen können. Es wird empfohlen, das secure-Attribut auf true zu setzen, wenn Ihre Anwendung 
+ über HTTPS bereitgestellt wird */
 app.use(
   session({
     secret: "1234",
@@ -135,8 +140,11 @@ const basicAuth = (req, res, next) => {
   }
 };
 
-/* OWASP Top 10: A07:2021 – Identification and Authentication Failures
-/allnotes endpoint is not properly protected, and anyone who knows the URL can access it. */
+/* A07:2021 – Identification and Authentication Failures (Identifizierungs- und Authentifizierungsfehler)
+
+Der Endpunkt /allnotes ist nicht ordnungsgemäß geschützt, und jeder, der die URL kennt, kann darauf zugreifen. 
+Um dies zu beheben, muss die basicAuth-Middleware hinzugefügt werden, um sicherzustellen, dass nur authentifizierte 
+Benutzer Zugriff auf den Endpunkt haben */
 app.get("/allnotes", async (req, res) => {
   //  LÖSUNG
   /* // Check if user is logged in
@@ -148,8 +156,6 @@ app.get("/allnotes", async (req, res) => {
   const notes = await getNotes();
   res.send(notes);
 });
-
-app.delete;
 
 app.get("/", (req, res) => {
   const errors = [];

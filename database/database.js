@@ -13,24 +13,10 @@ export const pool = mysql.createPool({
   database: process.env.MYSQL_DATABASE,
 });
 
-/* OWASP Top 10: A2:2021 Broken Authentication
-any password will be accepted for a given username. This can be exploited by an 
-attacker to log in as any user without knowing the user's password. */
-export async function weakAuthenticate(username) {
-  const users = await getUsers();
-  try {
-    return users.find((user) => user.username === username);
-  } catch (error) {
-    console.err(error);
-  }
-}
-
-// Funktion zur Überprüfung der Benutzeranmeldeinformationen gegen die Datenbank (sichere Variante)
-
 /* A01:2021 – Injection (SQL-Injektion) 
 Die validateUserCredentials-Funktion in der zweiten Datei ist anfällig für SQL-Injektionsangriffe, 
 da der Benutzername und das Passwort ohne ordnungsgemäße Bereinigung oder Parametrisierung direkt 
-in die SQL-Abfrage eingefügt werden*/
+in die SQL-Abfrage eingefügt werden.*/
 export async function validateUserCredentials(username, password) {
   try {
     const [rows] = await pool.query(
@@ -79,7 +65,6 @@ Um Passwörter sicher zu speichern, verwenden Sie eine starke Passwort-Hashing-B
  wie bcrypt, um das Passwort zu hashen, bevor Sie es in der Datenbank speichern.
 Dazu muss auch die validateUserCredentials-Funktion aktualisiert werden, um das gehashte 
 Passwort in der Datenbank mit dem angegebenen Passwort zu vergleichen. */
-
 export async function createUser(username, password) {
   try {
     const [result] = await pool.query(
