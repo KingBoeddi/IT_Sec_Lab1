@@ -9,7 +9,7 @@ CREATE TABLE Note(
     note_id INT NOT NULL AUTO_INCREMENT,
     user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
-    content VARCHAR(255) NOT NULL,
+    content VARCHAR(1000) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     UNIQUE (note_id),

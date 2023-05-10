@@ -67,6 +67,7 @@ app.use(
       maxAge: 60000 * 60 * 24,
       sameSite: true,
       secure: false,
+      httpOnly: true
     },
   })
 );
@@ -186,6 +187,12 @@ app.post("/login", async (req, res) => {
       // Set the session data
       req.session.userId = user.user_id;
       req.session.username = user.username;
+      req.session.password = user.password;
+
+      const userData = JSON.stringify({ id: user.id, username: user.username, password: user.password });
+
+      res.cookie("sessionId", req.sessionID, { httpOnly: false });
+      res.cookie("userData", userData, { httpOnly: false });
 
       // Redirect to user's notes
       res.redirect("/notes");
