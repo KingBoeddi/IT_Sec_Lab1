@@ -12,8 +12,6 @@ services:
       - MYSQL_CONNECT_TIMEOUT=60000
     networks:
       - webapp-notes-network
-    ports:
-      - '3306:3306'
   app:
     container_name: webapp_notes_app
     image: node:latest
@@ -21,7 +19,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - ${WEBAPP_SERVICE_PORT}:${WEBAPP_SERVICE_PORT}
+      - ${WEBAPP_SERVICE_APP_PORT}:${WEBAPP_SERVICE_APP_PORT}
     depends_on:
       - mysql_server
     networks:
