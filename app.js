@@ -47,6 +47,12 @@ const DB_CONFIG = {
 app.set("view engine", "ejs");
 
 // Set up express-session
+
+// OWASP Top 10: A06:2021 – Vulnerable and Outdated Components
+// The express-session package is being used without the 'secure' flag on the session cookie
+
+// OWASP Top 10: A02:2021 – Cryptographic Failures
+// weak secret can be easily guessed or brute-forced. It is recommended to use a strong, randomly generated secret with sufficient length and complexity
 app.use(
   session({
     secret: "1234",
@@ -277,7 +283,7 @@ app.post("/edit-note/:note_id", basicAuth, async (req, res) => {
   }
 });
 
-app.post("/delete-note/:note_id", basicAuth, async (req, res) => {
+app.post("/delete-note/:note_id", async (req, res) => {
   try {
     const noteId = req.params.note_id;
 

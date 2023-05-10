@@ -26,11 +26,23 @@ export async function weakAuthenticate(username) {
 }
 
 // Funktion zur Überprüfung der Benutzeranmeldeinformationen gegen die Datenbank (sichere Variante)
+
+/* A01:2021 – Injection (SQL-Injektion) 
+Die validateUserCredentials-Funktion in der zweiten Datei ist anfällig für SQL-Injektionsangriffe, 
+da der Benutzername und das Passwort ohne ordnungsgemäße Bereinigung oder Parametrisierung direkt 
+in die SQL-Abfrage eingefügt werden*/
 export async function validateUserCredentials(username, password) {
   try {
     const [rows] = await pool.query(
       `SELECT * FROM User WHERE username = '${username}' AND password = '${password}'`
     );
+
+    //  Injection vermeiden:
+    /* const [rows] = await pool.execute(
+      `SELECT * FROM User WHERE username = ? AND password = ?`,
+      [username, password]
+    ); */
+
     if (rows.length > 0) {
       return rows[0];
     } else {
@@ -48,13 +60,26 @@ export async function getNotes() {
   return rows;
 }
 
-// Funktion zum Abrufen aller Benutzer aus der Datenbank
+/* A03:2021 – Sensitive Data Exposure (Offenlegung sensibler Daten) - getUsers()
+
+Die getUsers-Funktion in der zweiten Datei ruft alle Benutzerdaten, 
+einschließlich Passwörtern, aus der Datenbank ab. Dies kann zu einer 
+Offenlegung sensibler Daten führen, wenn die Funktion missbraucht wird 
+oder ein Angreifer Zugang zu den zurückgegebenen Daten erhält. */
 export async function getUsers() {
   const [rows] = await pool.query(`SELECT * FROM User`);
   return rows;
 }
 
-// Funktion zum Registrieren eines neuen Benutzers in der Datenbank
+/* A02:2021 – Cryptographic Failures (Kryptografische Fehler) 
+
+Das Speichern von Passwörtern im Klartext, wie es in der createUser-Funktion 
+in der zweiten Datei gemacht wird, ist nicht sicher
+Um Passwörter sicher zu speichern, verwenden Sie eine starke Passwort-Hashing-Bibliothek
+ wie bcrypt, um das Passwort zu hashen, bevor Sie es in der Datenbank speichern.
+Dazu muss auch die validateUserCredentials-Funktion aktualisiert werden, um das gehashte 
+Passwort in der Datenbank mit dem angegebenen Passwort zu vergleichen. */
+
 export async function createUser(username, password) {
   try {
     const [result] = await pool.query(
@@ -119,9 +144,9 @@ export async function updateNote(noteId, title, content) {
 //  Löscht eine Notiz in der Datenbank
 export async function deleteNote(noteId) {
   try {
-    const [result] = await pool.query(
-      `DELETE FROM Note WHERE note_id = ?`, [noteId]
-    );
+    const [result] = await pool.query(`DELETE FROM Note WHERE note_id = ?`, [
+      noteId,
+    ]);
     return result;
   } catch (error) {
     console.error("Error occurred while deleting note:", error);
