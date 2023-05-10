@@ -37,7 +37,7 @@ const PORT = process.env.WEBAPP_SERVICE_PORT;
 
 // Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
 const DB_CONFIG = {
-  host: process.env.MYSQL_HOST_LOCAL || process.env.MYSQL_HOST,
+  host: process.env.WEBAPP_SERVICE_DB_LOCAL,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
@@ -45,22 +45,16 @@ const DB_CONFIG = {
 
 app.set("view engine", "ejs");
 
-// Serve favicon.ico file
-app.get("/favico.ico", (req, res) => {
-  res.sendFile("./myfavico.ico");
-});
-
 // Set up express-session
 app.use(
   session({
     secret: "1234",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       maxAge: 60000 * 60 * 24,
       sameSite: true,
       secure: false,
-      httpOnly: false,
     },
   })
 );
@@ -174,40 +168,22 @@ app.post("/login", async (req, res) => {
     /* const user = await weakAuthenticate(username,password); */
 
     if (user) {
-      // Fetch notes for the logged-in user
-      const notes = await getUserNotes(user.user_id);
-
       // Set the session data
       req.session.userId = user.user_id;
       req.session.username = user.username;
-      req.session.password = user.password;
-      req.session.notes = notes; // Store user notes in the session
-
-      const userData = JSON.stringify({
-        id: user.id,
-        username: user.username,
-        password: user.password,
-      });
-      const userNotes = JSON.stringify({ notes: notes });
-
-      res.cookie("sessionId", req.sessionID, { httpOnly: false });
-      res.cookie("userData", userData, { httpOnly: false });
-      res.cookie("userNotes", userNotes, { httpOnly: false });
 
       // Redirect to user's notes
       res.redirect("/notes");
     } else {
       // Authentication failed
-      res.render("login", {
-        error: "Authentication failed, invalid credentials.",
-      });
+      res.render("login", { error: "Authentication failed" });
     }
   } catch (error) {
     if (error.sqlMessage) {
-      console.log("SQL error:", error);
+      console.error("SQL error:", error);
       res.render("login", { error: error });
     } else {
-      console.log("Non-SQL error:", error);
+      console.error("Non-SQL error:", error);
       res.render("login", { error: "An error occurred" });
     }
   }
