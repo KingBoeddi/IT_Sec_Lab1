@@ -39,25 +39,6 @@
         >
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav">
-            <% if (userId) { %>
-            <li class="nav-item">
-              <a class="nav-link animate__animated" href="/notes">Notes</a>
-            </li>
-            <% } %>
-          </ul>
-          <% if (userId) { %>
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <span class="nav-link"><%= req.session.username %></span>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/logout">Logout</a>
-            </li>
-          </ul>
-          <% } %>
-        </div>
       </div>
     </nav>
 
@@ -94,10 +75,32 @@
                   />
                   <label for="password">Password</label>
                 </div>
+                <div class="form-check mb-3">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="show-password"
+                  />
+                  <label class="form-check-label" for="show-password">
+                    Show Password
+                  </label>
+                </div>
                 <button type="submit" class="btn btn-primary w-100">
                   Login
                 </button>
               </form>
+              <script>
+                document
+                  .getElementById("show-password")
+                  .addEventListener("change", function (event) {
+                    const passwordInput = document.getElementById("password");
+                    if (event.target.checked) {
+                      passwordInput.type = "text";
+                    } else {
+                      passwordInput.type = "password";
+                    }
+                  });
+              </script>
               <% if (error) { %>
               <div class="alert alert-danger">
                 <p><%= error %></p>

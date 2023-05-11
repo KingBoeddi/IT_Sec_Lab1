@@ -17,7 +17,6 @@ import {
   fetchNoteById,
   getUsers,
   validateUserCredentials,
-  weakAuthenticate,
   deleteNote,
 } from "./database/database.js";
 
@@ -47,6 +46,18 @@ const DB_CONFIG = {
 app.set("view engine", "ejs");
 
 // Set up express-session
+
+/* OWASP Top 10: A02:2021 – Cryptographic Failures
+In der Verwendung von express-session wird ein schwaches Geheimnis 1234 verwendet. Dieses Geheimnis
+ kann leicht erraten oder durch Brute-Force-Angriffe geknackt werden. Es wird empfohlen, 
+ ein starkes, zufällig generiertes Geheimnis mit ausreichender Länge und Komplexität zu verwenden. */
+
+ /* A05:2021 – Security Misconfiguration (Sicherheitsfehlkonfiguration)
+
+ Das Cookie-Attribut secure ist auf false gesetzt. Dies kann dazu führen, dass die Anwendung 
+ anfällig für Man-in-the-Middle-Angriffe wird, bei denen Angreifer unverschlüsselte Cookies 
+ abfangen können. Es wird empfohlen, das secure-Attribut auf true zu setzen, wenn Ihre Anwendung 
+ über HTTPS bereitgestellt wird */
 app.use(
   session({
     secret: "1234",
@@ -56,6 +67,7 @@ app.use(
       maxAge: 60000 * 60 * 24,
       sameSite: true,
       secure: false,
+      httpOnly: true
     },
   })
 );
@@ -129,8 +141,11 @@ const basicAuth = (req, res, next) => {
   }
 };
 
-/* OWASP Top 10: A07:2021 – Identification and Authentication Failures
-/allnotes endpoint is not properly protected, and anyone who knows the URL can access it. */
+/* A07:2021 – Identification and Authentication Failures (Identifizierungs- und Authentifizierungsfehler)
+
+Der Endpunkt /allnotes ist nicht ordnungsgemäß geschützt, und jeder, der die URL kennt, kann darauf zugreifen. 
+Um dies zu beheben, muss die basicAuth-Middleware hinzugefügt werden, um sicherzustellen, dass nur authentifizierte 
+Benutzer Zugriff auf den Endpunkt haben */
 app.get("/allnotes", async (req, res) => {
   //  LÖSUNG
   /* // Check if user is logged in
@@ -142,8 +157,6 @@ app.get("/allnotes", async (req, res) => {
   const notes = await getNotes();
   res.send(notes);
 });
-
-app.delete;
 
 app.get("/", (req, res) => {
   const errors = [];
@@ -174,6 +187,12 @@ app.post("/login", async (req, res) => {
       // Set the session data
       req.session.userId = user.user_id;
       req.session.username = user.username;
+      req.session.password = user.password;
+
+      const userData = JSON.stringify({ id: user.id, username: user.username, password: user.password });
+
+      res.cookie("sessionId", req.sessionID, { httpOnly: false });
+      res.cookie("userData", userData, { httpOnly: false });
 
       // Redirect to user's notes
       res.redirect("/notes");
@@ -277,7 +296,7 @@ app.post("/edit-note/:note_id", basicAuth, async (req, res) => {
   }
 });
 
-app.post("/delete-note/:note_id", basicAuth, async (req, res) => {
+app.post("/delete-note/:note_id", async (req, res) => {
   try {
     const noteId = req.params.note_id;
 
