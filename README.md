@@ -24,18 +24,7 @@ git clone https://github.com/KingBoeddi/IT_Sec_Lab1.git --config core.autocrlf=i
 
 Using `--config core.autocrlf=input` to avoid CR or LF conflicts inside of some scripts in this project.
 
-### 2. Configure environment variables
-
-Create a `.env` file in the project root directory with the following content:
-
-```
-MYSQL_ROOT_PASSWORD=your_root_password
-MYSQL_PASSWORD=your_password
-```
-
-Replace `your_root_password` and `your_password` with your desired MySQL root password and user password, respectively.
-
-### 3. Build and run the web application using Docker Compose
+### 2. Build and run the web application using Docker Compose
 
 Navigate to the project root directory in the terminal and run the following command:
 
