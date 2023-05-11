@@ -22,6 +22,8 @@ If you have Git installed, you can clone the repository using the following comm
 git clone https://github.com/KingBoeddi/IT_Sec_Lab1.git --config core.autocrlf=input
 ```
 
+Using `--config core.autocrlf=input` to avoid CR or LF conflicts inside of some scripts in this project.
+
 ### 2. Configure environment variables
 
 Create a `.env` file in the project root directory with the following content:
@@ -38,18 +40,14 @@ Replace `your_root_password` and `your_password` with your desired MySQL root pa
 Navigate to the project root directory in the terminal and run the following command:
 
 ```sh
-docker-compose up
+docker-compose up --build
 ```
 
-This command will build the Docker images for the `app` and `mysql_server` services, create containers, and start the web application.
+This command will build the Docker images for the `app` and `mysql_server` services, create containers, and start the web application. Note that on some computers, the mysql container `webapp_notes_db` might boot faster than the web application container `webapp_notes_app`. In that case, restart the `webapp_notes_app` and it should connect to the database.
 
 #### (optional) Locally start the database only
 
-For local development with `nodemon`, it is recommended to run the mysql database docker container locally along with the node.js server.
-
-```sh
-docker run --name mysql_server -p 3306:3306 -e MYSQL_ROOT_PASSWORD=itseclab -e MYSQL_DATABASE=webapp_notes -e MYSQL_USER=dbadmin -e MYSQL_PASSWORD=itseclab -d mysql:8.0.33
-```
+For local development with `nodemon`, change the `WEBAPP_SERVICE_DB` into `WEBAPP_SERVICE_DB_LOCAL` inside the `database.js` file. Also note that port `8080` and `3306` should be free for usage.
 
 Once the web application is running, you can access it in your web browser at `http://localhost:8080`.
 

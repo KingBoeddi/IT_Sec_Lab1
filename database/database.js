@@ -7,7 +7,7 @@ dotenv.config();
 
 // Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
 export const pool = mysql.createPool({
-  host: process.env.WEBAPP_SERVICE_DB_LOCAL,
+  host: process.env.WEBAPP_SERVICE_DB,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
