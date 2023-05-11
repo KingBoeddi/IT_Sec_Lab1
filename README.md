@@ -8,7 +8,7 @@ To run this web application, you need to have the following tools installed on y
 
 - Docker
 - Docker Compose
-- Git (optional)
+- Git
 
 ## Getting Started
 
