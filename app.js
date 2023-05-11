@@ -18,6 +18,7 @@ import {
   getUsers,
   validateUserCredentials,
   deleteNote,
+  pool
 } from "./database/database.js";
 
 // Importiere readFile Funktion aus fs/promises Modul
@@ -32,16 +33,8 @@ dotenv.config();
 // Erstelle eine Express-Anwendung
 const app = express();
 
-// Setze den Port, auf dem die Anwendung lauschen soll
+// Setze den Port, auf dem die Anwendung laufen soll
 const PORT = process.env.WEBAPP_SERVICE_APP_PORT;
-
-// Definiere die MySQL-Datenbankkonfiguration mit Umgebungsvariablen
-const DB_CONFIG = {
-  host: process.env.WEBAPP_SERVICE_DB_LOCAL,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-};
 
 app.set("view engine", "ejs");
 
@@ -104,14 +97,14 @@ async function executeSQLFile(filePath, connection) {
 async function initializeDatabase() {
   try {
     // Stelle eine Verbindung zur MySQL-Datenbank her
-    const connection = await mysql.createConnection(DB_CONFIG);
+    const connection = await pool.getConnection();
     console.log("✅\tConnected to database");
 
     // Führe die schema.sql-Datei aus
     await executeSQLFile("./database/schema.sql", connection);
 
     // Beende die Verbindung zur Datenbank
-    connection.end();
+    connection.release();
   } catch (err) {
     console.error("❌\tError connecting to MySQL database:", err);
   }
@@ -236,10 +229,10 @@ app.get("/notes", async (req, res) => {
   }
 });
 
-app.post("/notes", (req, res) => {
+app.post("/notes", async (req, res) => {
   const title = req.body.title;
   const note = req.body.note;
-  createNote(req.session.userId, title, note);
+  await createNote(req.session.userId, title, note);
   res.redirect("/notes");
 });
 
