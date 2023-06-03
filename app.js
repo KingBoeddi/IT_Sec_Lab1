@@ -1,5 +1,5 @@
 // Importiere notwendige Module
-import mysql from "mysql2/promise";
+/* import mysql from "mysql2/promise"; */
 import express from "express";
 import session from "express-session";
 import bodyParser from "body-parser";
@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import url from "url";
 import path from "path";
 import methodOverride from "method-override";
+import flash from "connect-flash";
 
 // Importiere benutzerdefinierte Funktionen aus database.js
 import {
@@ -18,7 +19,7 @@ import {
   getUsers,
   validateUserCredentials,
   deleteNote,
-  pool
+  pool,
 } from "./database/database.js";
 
 // Importiere readFile Funktion aus fs/promises Modul
@@ -45,7 +46,7 @@ In der Verwendung von express-session wird ein schwaches Geheimnis 1234 verwende
  kann leicht erraten oder durch Brute-Force-Angriffe geknackt werden. Es wird empfohlen, 
  ein starkes, zufällig generiertes Geheimnis mit ausreichender Länge und Komplexität zu verwenden. */
 
- /* A05:2021 – Security Misconfiguration (Sicherheitsfehlkonfiguration)
+/* A05:2021 – Security Misconfiguration (Sicherheitsfehlkonfiguration)
 
  Das Cookie-Attribut secure ist auf false gesetzt. Dies kann dazu führen, dass die Anwendung 
  anfällig für Man-in-the-Middle-Angriffe wird, bei denen Angreifer unverschlüsselte Cookies 
@@ -60,16 +61,17 @@ app.use(
       maxAge: 60000 * 60 * 24,
       sameSite: true,
       secure: false,
-      httpOnly: true
+      httpOnly: true,
     },
   })
 );
 
 // Set uses
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(methodOverride("_method"));
+app.use(flash());
 
 // Funktion zum Ausführen einer SQL-Datei mit der angegebenen MySQL-Verbindung
 async function executeSQLFile(filePath, connection) {
@@ -182,7 +184,11 @@ app.post("/login", async (req, res) => {
       req.session.username = user.username;
       req.session.password = user.password;
 
-      const userData = JSON.stringify({ id: user.id, username: user.username, password: user.password });
+      const userData = JSON.stringify({
+        id: user.id,
+        username: user.username,
+        password: user.password,
+      });
 
       res.cookie("sessionId", req.sessionID, { httpOnly: false });
       res.cookie("userData", userData, { httpOnly: false });
@@ -222,6 +228,7 @@ app.get("/notes", async (req, res) => {
       req: req,
       notes,
       username: req.session.username,
+      messages: req.flash(),
     });
   } catch (error) {
     console.error(error);
@@ -296,11 +303,14 @@ app.post("/delete-note/:note_id", async (req, res) => {
     // Delete the note with the given ID
     await deleteNote(noteId);
 
+    req.flash("success", "Note deleted successfully.");
+
     // Redirect to user's notes
     res.redirect("/notes");
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error occurred while deleting note");
+    req.flash("error", "Failed to delete note.");
+    res.redirect("/notes");
   }
 });
 
