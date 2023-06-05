@@ -8,6 +8,10 @@ import url from "url";
 import path from "path";
 import methodOverride from "method-override";
 import flash from "connect-flash";
+import chalk from "chalk";
+import fs from "fs";
+import axios from "axios";
+import cheerio from "cheerio";
 
 // Importiere benutzerdefinierte Funktionen aus database.js
 import {
@@ -40,14 +44,7 @@ const PORT = process.env.WEBAPP_SERVICE_APP_PORT;
 app.set("view engine", "ejs");
 
 // Set up express-session
-
-/* OWASP Top 10: A02:2021 – Cryptographic Failures
-In der Verwendung von express-session wird ein schwaches Geheimnis 1234 verwendet. Dieses Geheimnis
- kann leicht erraten oder durch Brute-Force-Angriffe geknackt werden. Es wird empfohlen, 
- ein starkes, zufällig generiertes Geheimnis mit ausreichender Länge und Komplexität zu verwenden. */
-
 /* A05:2021 – Security Misconfiguration (Sicherheitsfehlkonfiguration)
-
  Das Cookie-Attribut secure ist auf false gesetzt. Dies kann dazu führen, dass die Anwendung 
  anfällig für Man-in-the-Middle-Angriffe wird, bei denen Angreifer unverschlüsselte Cookies 
  abfangen können. Es wird empfohlen, das secure-Attribut auf true zu setzen, wenn Ihre Anwendung 
@@ -72,6 +69,50 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(methodOverride("_method"));
 app.use(flash());
+app.use("/logs", express.static("./logs/"));
+
+const userActivityLogger = (req, res, next) => {
+  const log = {
+    user_name: req.session.username || "N/A",
+    method: req.method,
+    path: req.path,
+    body: JSON.stringify(req.body), // Convert body object to string
+    time: new Date(),
+  };
+
+  // Format the date to a European time display format, without comma
+  const formattedDate = log.time
+    .toLocaleString("de-DE", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: false,
+    })
+    .replace(",", "");
+
+  const outputLog =
+    chalk.yellow("[" + `${formattedDate}` + "]: ") +
+    chalk.blue(`Username: ${log.user_name}`) +
+    " | " +
+    chalk.green(` Method: ${log.method}`) +
+    " | " +
+    chalk.magenta(` Route: ${log.path}`) +
+    " | " +
+    chalk.cyan(` Body: ${log.body}`);
+
+  console.log(outputLog); // Log to the console
+
+  const logWithoutColor = `[${formattedDate}]: Username: ${log.user_name} | Method: ${log.method} | Route: ${log.path} | Body: ${log.body}\n`;
+
+  fs.appendFile("./logs/logs.log", logWithoutColor, function (err) {
+    if (err) throw err;
+  });
+
+  next(); // Proceed to the next middleware/route handler
+};
 
 // Funktion zum Ausführen einer SQL-Datei mit der angegebenen MySQL-Verbindung
 async function executeSQLFile(filePath, connection) {
@@ -158,25 +199,18 @@ app.get("/", (req, res) => {
   res.render("homepage", { session: req.session, req: req, errors });
 });
 
-app.get("/users", async (req, res) => {
-  const users = await getUsers();
-  res.send(users);
-});
-
 // Login GET route handler
 app.get("/login", (req, res) => {
   res.render("login", { userId: req.session.userId, error: null });
 });
 
 // Login POST route handler
-app.post("/login", async (req, res) => {
+app.post("/login", userActivityLogger, async (req, res) => {
   try {
     const { username, password } = req.body;
 
     // Check if the provided username and password are valid
     const user = await validateUserCredentials(username, password);
-
-    /* const user = await weakAuthenticate(username,password); */
 
     if (user) {
       // Set the session data
@@ -236,7 +270,7 @@ app.get("/notes", async (req, res) => {
   }
 });
 
-app.post("/notes", async (req, res) => {
+app.post("/notes", userActivityLogger, async (req, res) => {
   const title = req.body.title;
   const note = req.body.note;
   await createNote(req.session.userId, title, note);
@@ -273,30 +307,35 @@ app.get("/edit-note/:note_id", basicAuth, async (req, res) => {
   }
 });
 
-app.post("/edit-note/:note_id", basicAuth, async (req, res) => {
-  // Check if user is logged in
-  if (!req.session.userId) {
-    res.redirect("/login");
-    return;
+app.post(
+  "/edit-note/:note_id",
+  userActivityLogger,
+  basicAuth,
+  async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.userId) {
+      res.redirect("/login");
+      return;
+    }
+
+    try {
+      const noteId = req.params.note_id;
+      const title = req.body.title;
+      const content = req.body.content;
+
+      // Update the note in the database
+      await updateNote(noteId, title.trim(), content.trim());
+
+      // Redirect to user's notes
+      res.redirect("/notes");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error occurred while updating note");
+    }
   }
+);
 
-  try {
-    const noteId = req.params.note_id;
-    const title = req.body.title;
-    const content = req.body.content;
-
-    // Update the note in the database
-    await updateNote(noteId, title, content);
-
-    // Redirect to user's notes
-    res.redirect("/notes");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error occurred while updating note");
-  }
-});
-
-app.post("/delete-note/:note_id", async (req, res) => {
+app.post("/delete-note/:note_id", userActivityLogger, async (req, res) => {
   try {
     const noteId = req.params.note_id;
 
@@ -314,8 +353,29 @@ app.post("/delete-note/:note_id", async (req, res) => {
   }
 });
 
+app.get("/random-joke", async (req, res) => {
+  try {
+    const response = await axios.get("https://api.chucknorris.io/jokes/random");
+    const joke = response.data.value;
+    const title = "ChuckNorris Randoms";
+
+    res.json({ title, text: joke });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching random joke" });
+  }
+});
+
+app.get("/logs", userActivityLogger, async (req, res) => {
+  if (!req.session.userId) {
+    res.status(403).send("Access denied");
+    return;
+  } else {
+    res.download(path.join(__dirname, "./logs/logs.log"));
+  }
+});
+
 // Logout route handler
-app.get("/logout", (req, res) => {
+app.get("/logout", userActivityLogger, (req, res) => {
   // Destroy the session
   req.session.destroy((err) => {
     if (err) {
