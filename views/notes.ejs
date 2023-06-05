@@ -112,6 +112,7 @@
           ></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Add Note</button>
+        <button type="button" class="btn btn-secondary" id="randomNote">Generate</button>
       </form>
 
       <% if (messages.success) { %>
@@ -142,7 +143,6 @@
                 class="btn btn-primary col"
                 >Edit</a
               >
-              <!-- Change the anchor tag to a form with a hidden input field for the _method override -->
               <form
                 action="/delete-note/<%= note.note_id %>?_method=POST"
                 method="POST"
@@ -174,6 +174,16 @@
           $(".alert").fadeOut("slow");
         }, 3000);
       });
+
+      document
+        .getElementById("randomNote")
+        .addEventListener("click", async () => {
+          const response = await fetch("/random-joke");
+          const joke = await response.json();
+
+          document.getElementById("title").value = joke.title;
+          document.getElementById("note").value = joke.text;
+        });
     </script>
   </body>
 </html>
